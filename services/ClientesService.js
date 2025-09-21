@@ -7,10 +7,10 @@ export default class ClientesService {
     }
 
     async agregarCliente(clienteObj) {
-        if (!clienteObj.nombre || !clienteObj.telefono || !clienteObj.direccion || !clienteObj.zona) {
+        if (!clienteObj.nombre || !clienteObj.telefono || !clienteObj.zona) {
             throw new Error("El cliente debe tener nombre, teléfono, dirección y zona");
         }
-        return await this.repositorio.crearCliente(clienteObj);
+        return await this.repositorio.crear(clienteObj);
     }
 
     async editarCliente(id, clienteEditado) {

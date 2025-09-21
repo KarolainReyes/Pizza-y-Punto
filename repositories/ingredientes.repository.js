@@ -12,24 +12,27 @@ export default class IngredientesRepositorio {
     }
 
     async editarStock(ingrediente) {
-        const session = this.cliente.startSession();
-        try {
-            await session.withTransaction(async () => {
-                const ingredienteEncontrado = await this.coleccion.findOne({ _id: ingrediente.id }, { session });
-                if (!ingredienteEncontrado) { throw new Error("Ingrediente no encontrado"); }
-                await this.coleccion.updateOne(
-                    { _id: ingrediente.id },
-                    {$set:{stock: cantidad }} ,
-                    { session }
-                );
-                console.log(chalk.green("Stock editado exitosamente"));
-            });
-        } catch (error) {
-            console.error(chalk.red("Error en la transacción:"), error.message);
-        } finally {
-            await session.endSession();
-        }
+    const session = this.cliente.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const ingredienteEncontrado = await this.coleccion.findOne({ _id: ingrediente.id }, { session });
+            if (!ingredienteEncontrado) throw new Error("Ingrediente no encontrado");
+
+            await this.coleccion.updateOne(
+                { _id: ingrediente.id },
+                { $set: { stock: ingrediente.cantidad } },  // <-- usar ingrediente.cantidad
+                { session }
+            );
+
+            console.log("Stock editado exitosamente");
+        });
+    } catch (error) {
+        console.error("Error en la transacción:", error.message);
+    } finally {
+        await session.endSession();
     }
+}
+
 
 
     async restarVarios(listaIngredientes) {
@@ -63,5 +66,7 @@ export default class IngredientesRepositorio {
         return await this.coleccion.deleteOne({_id:ingrediente.id});
     }
 
-
+async buscarPorId(id) {
+    return await this.coleccion.findOne({ _id: id });
+}
 }

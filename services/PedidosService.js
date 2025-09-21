@@ -35,7 +35,7 @@ export default class PedidosService {
 
             // Restar ingredientes
             await this.ingredientesRepo.restarVarios(ingredientesNecesarios);
-
+            
             // Asignar repartidor según la zona del cliente
             const repartidores = await this.repartidoresService.listarRepartidores();
             const repartidorDisponible = repartidores.find(
