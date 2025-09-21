@@ -1,5 +1,5 @@
 import inquirer from "inquirer";
-import RealizarPedidoService from "";
+import RealizarPedidoService from "../services/PedidosService.js";
 
 export default class RegistrarPedidoCommand {
   constructor({ pedidoService = new RealizarPedidoService() } = {}) {
