@@ -33,19 +33,22 @@ export default class RepartidoresService {
         return await this.repositorio.listarTodos();
     }
 
+     async obtenerDisponiblePorZona(zona) {
+        const repartidores = await this.repositorio.listarTodos();
+        const disponible = repartidores.find(r => r.zona === zona && r.estado === "Disponible");
+        if (!disponible) return null;
+        return disponible;
+    }
+
     async marcarOcupado(id) {
         const repExistente = await this.repositorio.buscarPorId(new ObjectId(id));
-        if (!repExistente) {
-            throw new Error("Repartidor no encontrado");
-        }
-        return await this.repositorio.actualizarEstado(id, "ocupado");
+        if (!repExistente) throw new Error("Repartidor no encontrado");
+        return await this.repositorio.actualizarEstado(id, "Ocupado");
     }
 
     async marcarDisponible(id) {
         const repExistente = await this.repositorio.buscarPorId(new ObjectId(id));
-        if (!repExistente) {
-            throw new Error("Repartidor no encontrado");
-        }
-        return await this.repositorio.actualizarEstado(id, "disponible");
+        if (!repExistente) throw new Error("Repartidor no encontrado");
+        return await this.repositorio.actualizarEstado(id, "Disponible");
     }
 }

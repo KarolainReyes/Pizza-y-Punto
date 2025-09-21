@@ -1,25 +1,10 @@
 export default class Cliente {
-  #correo;
   #telefono;
 
-  constructor(nombre, correo, telefono) {
+  constructor(nombre, telefono, zona) {
     this.nombre = nombre;
-    this.#correo = correo;       
-    this.#telefono = telefono;   
-    this.pedidos = [];
-  }
-
-  // ======== SETTERS/GETTERS PRIVADOS ========
-  set correo(nuevoCorreo) {
-    if (this.#validarCorreo(nuevoCorreo)) {
-      this.#correo = nuevoCorreo;
-    } else {
-      throw new Error('❌ Correo electrónico inválido');
-    }
-  }
-
-  get correo() {
-    return this.#correo;
+    this.#telefono = telefono;
+    this.zona = zona;     
   }
 
   set telefono(nuevoTelefono) {
@@ -35,7 +20,6 @@ export default class Cliente {
     return this.#telefono;
   }
 
-  // ======== MÉTODOS PÚBLICOS ========
   agregarPedido(pedido) {
     this.pedidos.push(pedido);
   }
@@ -46,9 +30,4 @@ export default class Cliente {
       : `Pedidos de ${this.nombre}: ${this.pedidos.join(', ')}`;
   }
 
-  // ======== MÉTODO PRIVADO ========
-  #validarCorreo(correo) {
-    // Regex simple para validar emails
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
-  }
 }

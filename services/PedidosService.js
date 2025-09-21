@@ -1,7 +1,7 @@
 import PedidosRepositorio from "../repositories/pedidos.repository.js";
 import PizzasRepositorio from "../repositories/pizzas.repository.js";
 import IngredientesRepositorio from "../repositories/ingredientes.repository.js";
-import RepartidoresRepositorio from "../repositories/repartidores.repository.js";
+import RepartidoresService from "./RepartidoresService.js";
 import { ObjectId } from "mongodb";
 
 export default class PedidosService {
@@ -10,59 +10,68 @@ export default class PedidosService {
         this.pedidosRepo = new PedidosRepositorio(base, cliente);
         this.pizzasRepo = new PizzasRepositorio(base, cliente);
         this.ingredientesRepo = new IngredientesRepositorio(base, cliente);
-        this.repartidoresRepo = new RepartidoresRepositorio(base, cliente);
+        this.repartidoresService = new RepartidoresService(base, cliente);
     }
 
     async realizarPedido(clienteObj, pizzaIds) {
-        const session = this.cliente.startSession();
+    const session = this.cliente.startSession();
 
-        try {
-            await session.withTransaction(async () => {
+    try {
+        await session.withTransaction(async () => {
+            const pizzas = [];
+            const ingredientesNecesarios = [];
 
-                const pizzas = [];
-                const ingredientesNecesarios = [];
+            // Buscar pizzas y acumular ingredientes
+            for (const id of pizzaIds) {
+                const pizza = await this.pizzasRepo.buscarPorId(new ObjectId(id));
+                if (!pizza) throw new Error(`Pizza ${id} no encontrada`);
+                pizzas.push(pizza);
 
-                for (const id of pizzaIds) {
-                    const pizza = await this.pizzasRepo.buscarPorId(new ObjectId(id));
-                    if (!pizza) throw new Error(`Pizza ${id} no encontrada`);
-                    pizzas.push(pizza);
-
-                    for (const ing of pizza.ingredientes) {
-                        ingredientesNecesarios.push({ id: new ObjectId(ing.id), cantidad: ing.cantidad });
-                    }
+                // Acumular ingredientes necesarios (1 unidad por pizza)
+                for (const ingId of pizza.ingredientes) {
+                    ingredientesNecesarios.push({ id: new ObjectId(ingId), cantidad: 1 });
                 }
+            }
 
-                await this.ingredientesRepo.restarVarios(ingredientesNecesarios);
+            // Restar ingredientes
+            await this.ingredientesRepo.restarVarios(ingredientesNecesarios);
 
-                const repartidor = await this.repartidoresRepo.obtenerDisponiblePorZona(clienteObj.zona);
-                if (!repartidor) throw new Error("No hay repartidores disponibles en la zona del cliente");
+            // Asignar repartidor según la zona del cliente
+            const repartidores = await this.repartidoresService.listarRepartidores();
+            const repartidorDisponible = repartidores.find(
+                r => r.zona === clienteObj.zona && r.estado === 'Disponible'
+            );
+            if (!repartidorDisponible) throw new Error("No hay repartidores disponibles en la zona del cliente");
 
-                await this.repartidoresRepo.actualizarEstado(repartidor._id, "ocupado", session);
+            // Marcar repartidor como ocupado
+            await this.repartidoresService.marcarOcupado(repartidorDisponible._id);
 
+            // Calcular total
+            const total = pizzas.reduce((sum, p) => sum + p.precio, 0);
 
-                const total = pizzas.reduce((sum, p) => sum + p.precio, 0);
+            // Crear pedido
+            const pedido = {
+                clienteId: new ObjectId(clienteObj._id),
+                pizzas: pizzaIds.map(id => new ObjectId(id)),
+                total,
+                fecha: new Date(),
+                repartidorAsignado: repartidorDisponible._id
+            };
 
-                const pedido = {
-                    clienteId: new ObjectId(clienteObj._id),
-                    pizzas: pizzaIds.map(id => new ObjectId(id)),
-                    total,
-                    fecha: new Date(),
-                    repartidorAsignado: repartidor._id
-                };
+            await this.pedidosRepo.crearPedido(pedido, session);
+        });
 
-                await this.pedidosRepo.crearPedido(pedido, session);
-            });
-
-            console.log("Pedido realizado con éxito");
-        } catch (error) {
-            console.error("Error al realizar pedido:", error);
-        } finally {
-            await session.endSession();
-        }
+        console.log("✅ Pedido realizado con éxito");
+    } catch (error) {
+        console.error("❌ Error al realizar pedido:", error.message);
+    } finally {
+        await session.endSession();
     }
-     async listarPedidos() {
-        const pedidos = await this.pedidosRepo.listarTodos();
+}
 
+
+    async listarPedidos() {
+        const pedidos = await this.pedidosRepo.listarTodos();
         return pedidos.map(p => ({
             _id: p._id,
             clienteId: p.clienteId,
@@ -75,10 +84,7 @@ export default class PedidosService {
 
     async eliminarPedido(id) {
         const pedido = await this.pedidosRepo.buscarPorId(new ObjectId(id));
-        if (!pedido) {
-            throw new Error("Pedido no encontrado");
-        }
-
+        if (!pedido) throw new Error("Pedido no encontrado");
         return await this.pedidosRepo.eliminarPedido(id);
     }
 }
