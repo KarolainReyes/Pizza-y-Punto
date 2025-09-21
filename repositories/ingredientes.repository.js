@@ -10,19 +10,18 @@ export default class IngredientesRepositorio {
         return await this.coleccion.find().toArray();
     }
 
-    async restarSiHay(id, cantidad) {
+    async editarStock(ingrediente) {
         const session = this.cliente.startSession();
         try {
             await session.withTransaction(async () => {
-                const ingrediente = await this.coleccion.findOne({ _id: id }, { session });
-                if (!ingrediente) { throw new Error("Ingrediente no encontrado"); }
-                if (ingrediente.stock < cantidad) { throw new Error("Stock insuficiente"); }
+                const ingredienteEncontrado = await this.coleccion.findOne({ _id: ingrediente.id }, { session });
+                if (!ingredienteEncontrado) { throw new Error("Ingrediente no encontrado"); }
                 await this.coleccion.updateOne(
-                    { _id: id },
-                    { $inc: { stock: -cantidad } },
+                    { _id: ingrediente.id },
+                    {$set:{stock: cantidad }} ,
                     { session }
                 );
-                console.log(chalk.green("Ingredientes restados exitosamente"));
+                console.log(chalk.green("Stock editado exitosamente"));
             });
         } catch (error) {
             console.error(chalk.red("Error en la transacción:"), error.message);
@@ -31,25 +30,6 @@ export default class IngredientesRepositorio {
         }
     }
 
-    async añadirIngredientes(id, cantidad) {
-        const session = this.cliente.startSession();
-        try {
-            await session.withTransaction(async () => {
-                const ingrediente = await this.coleccion.findOne({ _id: id }, { session });
-                if (!ingrediente) { throw new Error("Ingrediente no encontrado"); }
-                await this.coleccion.updateOne(
-                    { _id: id },
-                    { $inc: { stock: +cantidad } },
-                    { session }
-                );
-                console.log(chalk.green("Ingredientes añadidos exitosamente"));
-            });
-        } catch (error) {
-            console.error(chalk.red("Error en la transacción:"), error.message);
-        } finally {
-            await session.endSession();
-        }
-    }
 
     async restarVarios(listaIngredientes) {
         const session = this.cliente.startSession();
@@ -74,25 +54,13 @@ export default class IngredientesRepositorio {
         }
     }
 
-    async crearIngrediente(nombre, tipo, cantidad) {
-        try {
-            const ingredienteNuevo = new Ingrediente(nombre, tipo, cantidad);
-            const resultado = await this.coleccion.insertOne(ingredienteNuevo);
-
-            console.log("Ingrediente creado correctamente");
-        } catch (error) {
-            console.error("Error al crear ingrediente:", error);
-        }
+    async crearIngrediente(ingrediente) {
+        return await this.coleccion.insertOne(ingrediente)
     }
 
-    async eliminarIngredientes(id) {
-        try {
-                await this.coleccion.deleteOne({ _id: id });
-                console.log(chalk.green("Ingrediente eliminado exitosamente"));
-        } catch (error) {
-            console.error(chalk.red("Error en la transacción:"), error);
-        } 
+    async (ingrediente) {
+        return await this.coleccion.deleteOne({_id:ingrediente.id});
     }
 
-    
+
 }
