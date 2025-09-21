@@ -27,6 +27,7 @@ import IngredientesService from "../services/IngredientesService.js";
 import RepartidoresService from "../services/RepartidoresService.js";
 import PedidosService from "../services/PedidosService.js";
 import ClientesService from "../services/ClientesService.js";
+import ConsultasService from "../queries/queries.js";
 
 export default async function menuPrincipal(base, cliente) {
   // Instanciar servicios
@@ -51,7 +52,8 @@ export default async function menuPrincipal(base, cliente) {
           { name: " Gestionar Clientes ", value: "3" },
           { name: " Gestionar Repartidores ", value: "4" },
           { name: " Gestionar Almacen ", value: "5" },
-          { name: " Salir ", value: "6" }
+          { name: " Consultar ", value: "6" },
+          { name: " Salir ", value: "7" }
         ]
       }
     ]);
@@ -73,6 +75,9 @@ export default async function menuPrincipal(base, cliente) {
         await subMenuAlmacen(ingredientesService);
         break;
       case "6":
+      await subMenuConsultas(base)
+        break;
+      case "7":
         salir = true;
         console.log("Saliendo...");
         break;
@@ -233,5 +238,44 @@ async function subMenuAlmacen(ingredientesService) {
       break;
     case "5":
       return;
+  }
+}
+
+async function subMenuConsultas(base) {
+  const consultasService = new ConsultasService(base);
+
+  let volver = false;
+  while (!volver) {
+    const { opcionConsulta } = await inquirer.prompt([
+      {
+        type: "list",
+        name: "opcionConsulta",
+        message: "Selecciona una opción:",
+        choices: [
+          { name: " Ingredientes más usados en el último mes", value: "1" },
+          { name: " Promedio de precios por categoría de pizza", value: "2" },
+          { name: " Categoría de pizzas con más ventas", value: "3" },
+          { name: " Volver", value: "4" }
+        ]
+      }
+    ]);
+
+    switch (opcionConsulta) {
+      case "1":
+        const ingredientes = await consultasService.ingredientesMasUsadosUltimoMes();
+        console.table(ingredientes);
+        break;
+      case "2":
+        const precios = await consultasService.promedioPreciosPorCategoria();
+        console.table(precios);
+        break;
+      case "3":
+        const categoria = await consultasService.categoriaMasVendida();
+        console.table(categoria);
+        break;
+      case "4":
+        volver = true;
+        break;
+    }
   }
 }
