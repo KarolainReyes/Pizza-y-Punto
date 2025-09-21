@@ -2,24 +2,17 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import { conectar, obtenerBase, obtenerCliente, cerrarConexion } from './config/database.js';
-import AgregarPizzaCommand from "../commands/agregarPizza.js";
-import PizzasService from "../services/PizzasService.js";
-import IngredientesService from "../services/IngredientesService.js";
-
-
+import menuPrincipal from "../cli/menuPrincipal.js"; 
 const uri = process.env.MONGO_URI;
+try {
+  await conectar(uri, "pizza_y_punto");
+  const base = obtenerBase();
+  const cliente = obtenerCliente();
+  await menuPrincipal(base, cliente);
 
-if (!uri) {
-  throw new Error("La variable de entorno MONGO_URI no está definida.");
+} catch (error) {
+  console.error("Error en la aplicación:", error);
+} finally {
+  await cerrarConexion();
+  console.log("Conexión a la base de datos cerrada.");
 }
-
-await conectar(uri, "pizza_y_punto");
-
-const base = obtenerBase();
-const cliente = obtenerCliente();
-
-const comando = new AgregarPizzaCommand({pizzaService: new PizzasService(base, cliente),ingredientesService: new IngredientesService(base, cliente)});
-
-await comando.execute(); 
-
-await cerrarConexion();
