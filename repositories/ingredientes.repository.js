@@ -58,7 +58,7 @@ export default class IngredientesRepositorio {
         return await this.coleccion.insertOne(ingrediente)
     }
 
-    async (ingrediente) {
+    async eliminarIngrediente(ingrediente) {
         return await this.coleccion.deleteOne({_id:ingrediente.id});
     }
 
