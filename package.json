@@ -19,6 +19,8 @@
   "homepage": "https://github.com/KarolainReyes/Pizza-y-Punto#readme",
   "dependencies": {
     "chalk": "^5.6.2",
-    "inquirer": "^12.9.6"
+    "inquirer": "^12.9.6",
+    "mongodb": "^6.20.0",
+    "table": "^6.9.0"
   }
 }
