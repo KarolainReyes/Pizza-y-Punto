@@ -1,4 +1,5 @@
 import chalk from "chalk";
+import {MongoClient} from "mongodb"
 
 export default class IngredientesRepositorio {
     constructor(base, cliente) {
