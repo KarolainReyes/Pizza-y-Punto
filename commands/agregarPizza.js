@@ -1,6 +1,6 @@
 
 import inquirer from "inquirer";
-import PizzaService from "../application/PizzaService.js";
+import PizzaService from "";
 
 export default class AgregarPizzaCommand {
   constructor({ pizzaService = new PizzaService() } = {}) {
@@ -26,8 +26,8 @@ export default class AgregarPizzaCommand {
         ingredientes: answers.ingredientes.split(",")
       });
       console.log("✅ Pizza agregada con éxito");
-    } catch (err) {
-      console.error("❌ Error al agregar pizza:", err.message);
+    } catch (error) {
+      console.log("❌ Error al agregar pizza:", error);
     }
   }
 }
